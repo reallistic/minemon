@@ -41,6 +41,17 @@ def execute(path, sql, *args, **kwargs):
 
 
 def create(path):
+    """
+    Creates the database tables.
+    The schema is intended to be used to show the trend over time.
+    I imagine we'll be asking questions like:
+        How much are we making per month
+        How often is the miner down
+        What is the average hashrate
+    We do not expect sql to do this data crunching for us, but instead
+    python. Perhaps in the future this should change.
+    """
+
     execute(path, '''
             CREATE TABLE IF NOT EXISTS stats(
                 date TEXT,
