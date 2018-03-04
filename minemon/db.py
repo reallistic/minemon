@@ -7,21 +7,37 @@ import sqlite3
 from minemon import cli
 
 
-def get_connection(path):
-    conn = sqlite3.connect(path)
+def get_cursor(path):
+    """
+    Connects to the db and gets a cursor from the connection.
+    A cursor was chosen here since it is the recommended approach.
+    Likewise, the underlying connection can be used via:
+        cursor.connection
+
+    isolation_level=None turns on autocommit. Without it, every
+    execution would need to be manually commited and since
+    this app doesn't need transactions there is no use in adding
+    the extra line of code.
+    """
+    conn = sqlite3.connect(path, isolation_level=None)
     c = conn.cursor()
     return c
 
 
 def execute(path, sql, *args, **kwargs):
-    conn = get_connection(path)
+    """
+    Execute some sql.
+    Closing the cursor and connection after every execute
+    seemed like a good idea since this app is low volume.
+    If the number of transactions increased than it should
+    be kept open.
+    """
+    cur = get_cursor(path)
     try:
-        print(sql, args)
-        res = conn.execute(sql, args or kwargs)
-        print(res)
+        res = cur.execute(sql, args or kwargs)
     finally:
-        conn.close()
-        conn.connection.close()
+        cur.close()
+        cur.connection.close()
 
 
 def create(path):
@@ -47,8 +63,9 @@ def insert(path, *, date, hashrate, is_down, balance, total_paid):
         )
         values (?, ?, ?, ?, ?)
         ''', date, hashrate, is_down, balance, total_paid)
-    conn = get_connection(path)
-    print(conn.fetchone())
+    cur = get_cursor(path)
+    cur.execute('SELECT * from stats')
+    print('inserted', cur.fetchone())
 
 
 if __name__ == '__main__':
